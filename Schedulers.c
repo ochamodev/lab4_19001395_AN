@@ -58,6 +58,7 @@ void FCFS(void *vargp) {
 
 	fclose(inputFile);
 
+	//ordenando la lista por medio de AT
 	qsort(processes, ARRAY_LENGTH, sizeof(process), sortByAT);
 
 	int exitTime = 0;
@@ -90,8 +91,10 @@ void FCFS(void *vargp) {
 		);
 		printf("|-------|-------|-------|-------|-------|-------|-------|-------|-------| \n\n");
 	}
+
+	// calculando promedios
 	for (int i = 0; i < ARRAY_LENGTH; i++) {
-		
+
 	}
 	printf("|%s\t|%02d\t|%02d\t|%02d\t|%02d\t|%03d\t|%03d\t|%03d\t|%03d\t|\n",
 			"TH",
