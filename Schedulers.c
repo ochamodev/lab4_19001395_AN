@@ -17,18 +17,6 @@ void output(void *vargp) {
 	printf("|-------|-------|-------|-------|-------|-------|-------|-------|-------| \n\n");
 } 
 
-int sortByAT(const void *a, const void *b) {
-	process *f = (process*) a;
-	process *s = (process*) b;
-
-	if (f->arrivalTime > s->arrivalTime) {
-		return 1;
-	} else if (f->arrivalTime < s->arrivalTime) {
-		return -1;
-	}
-	return 0;
-}
-
 void FCFS(void *vargp) {
 	printf(" --> FCFS\n");
 	output(0);
@@ -62,6 +50,16 @@ void FCFS(void *vargp) {
 	qsort(processes, ARRAY_LENGTH, sizeof(process), sortByAT);
 
 	int exitTime = 0;
+
+	int avgExitTime = 0;
+	int avgQueue = 0;
+	int avgQM = 0;
+	int avgAT = 0;
+	int avgBT = 0;
+	int avgWT = 0;
+	int avgRT = 0;
+	int avgTT = 0;
+
 	for (int i = 0; i < index; i++) {
 		process *p = &processes[i];
 		exitTime += p->burstTime;
@@ -69,14 +67,24 @@ void FCFS(void *vargp) {
 		p->turnAroundTime = calculateTT(p->exitTime, p->arrivalTime);
 		p->waitingTime = calculateWaitingTime(p->turnAroundTime, p->burstTime);
 		p->responseTime = i;
-
+		
 		if (p->responseTime == 0) {
 			p->responseTime = 0;
 		} else {
 			p->responseTime = calculateTT(processes[i - 1].exitTime, processes[i].arrivalTime);
 		}
 
-		processes[i].queue	= processes[i].arrivalTime;
+		p->queue = processes[i].arrivalTime;
+
+		avgExitTime += exitTime;
+		avgQueue += p->queue;
+		avgQM = 0;
+		avgAT += p->arrivalTime;
+		avgBT += p->burstTime;
+		avgWT += p->waitingTime;
+		avgRT += i;
+		avgTT += p->responseTime;
+
 		printf("|-------|-------|-------|-------|-------|-------|-------|-------|-------| \n");
 		printf("|%s\t|%02d\t|%02d\t|%02d\t|%02d\t|%03d\t|%03d\t|%03d\t|%03d\t|\n",
 			p->pxx,
@@ -93,13 +101,17 @@ void FCFS(void *vargp) {
 	}
 
 	// calculando promedios
-	for (int i = 0; i < ARRAY_LENGTH; i++) {
-
-	}
+	int avgCount = index + 1;
 	printf("|%s\t|%02d\t|%02d\t|%02d\t|%02d\t|%03d\t|%03d\t|%03d\t|%03d\t|\n",
 			"TH",
-			0,
-			0
+			avgQueue / avgCount,
+			avgQM,
+			avgAT / avgCount,
+			avgBT / avgCount,
+			avgExitTime / avgCount,
+			avgWT / avgCount,
+			avgRT / avgCount,
+			avgTT / avgCount
 		);
 
 } 
@@ -107,11 +119,137 @@ void FCFS(void *vargp) {
 void PS(void *vargp) {
 	printf(" --> PS\n");
 	output(0);
+
+	int totalExitTime = 0;
+
+	process processes[ARRAY_LENGTH];
+
+	FILE *inputFile = fopen(FILE_NAME, "r");
+
+	int index = -1;
+
+	char line[255];
+	char *limiter = "\t";
+
+	while (fgets(line, sizeof(line), inputFile) != NULL) {
+		if (index < 0) {
+			index++;
+			continue;
+		} else {
+			process p = processes[index];
+			sscanf(line, "%s\t%d\t%d\t%d\n", p.pxx, &p.arrivalTime, &p.burstTime, &p.vPriority);
+			processes[index] = p;
+			index++;
+		}
+	}
+
+	fclose(inputFile);
+
+	//ordenando la lista por medio de AT
+	qsort(processes, ARRAY_LENGTH, sizeof(process), sortByPriority);
+
+	int exitTime = 0;
+
+	int avgExitTime = 0;
+	int avgQueue = 0;
+	int avgQM = 0;
+	int avgAT = 0;
+	int avgBT = 0;
+	int avgWT = 0;
+	int avgRT = 0;
+	int avgTT = 0;
+
+	for (int i = 0; i < index; i++) {
+		process *p = &processes[i];
+		exitTime += p->burstTime;
+		p->exitTime = exitTime;
+		p->turnAroundTime = calculateTT(p->exitTime, p->arrivalTime);
+		p->waitingTime = calculateWaitingTime(p->turnAroundTime, p->burstTime);
+		p->responseTime = i;
+		
+		if (p->responseTime == 0) {
+			p->responseTime = 0;
+		} else {
+			p->responseTime = calculateTT(processes[i - 1].exitTime, processes[i].arrivalTime);
+		}
+
+		p->queue = processes[i].arrivalTime;
+
+		avgExitTime += exitTime;
+		avgQueue += p->queue;
+		avgQM = 0;
+		avgAT += p->arrivalTime;
+		avgBT += p->burstTime;
+		avgWT += p->waitingTime;
+		avgRT += i;
+		avgTT += p->responseTime;
+
+		printf("|-------|-------|-------|-------|-------|-------|-------|-------|-------| \n");
+		printf("|%s\t|%02d\t|%02d\t|%02d\t|%02d\t|%03d\t|%03d\t|%03d\t|%03d\t|\n",
+			p->pxx,
+			p->queue,
+			0,
+			p->arrivalTime,
+			p->burstTime,
+			p->exitTime,
+			p->waitingTime,
+			p->responseTime,
+			p->turnAroundTime
+		);
+		printf("|-------|-------|-------|-------|-------|-------|-------|-------|-------| \n\n");
+	}
+
+	// calculando promedios
+	int avgCount = index + 1;
+	printf("|%s\t|%02d\t|%02d\t|%02d\t|%02d\t|%03d\t|%03d\t|%03d\t|%03d\t|\n",
+			"TH",
+			avgQueue / avgCount,
+			avgQM,
+			avgAT / avgCount,
+			avgBT / avgCount,
+			avgExitTime / avgCount,
+			avgWT / avgCount,
+			avgRT / avgCount,
+			avgTT / avgCount
+		);
+
 } 
 
 void RR(void *vargp) {
 	printf(" --> RR\n");
 	output(0);
+
+	int quantum = 2;
+
+	process processes[ARRAY_LENGTH];
+
+	FILE *inputFile = fopen(FILE_NAME, "r");
+
+	int index = -1;
+
+	char line[255];
+	char *limiter = "\t";
+
+	while (fgets(line, sizeof(line), inputFile) != NULL) {
+		if (index < 0) {
+			index++;
+			continue;
+		} else {
+			process p = processes[index];
+			sscanf(line, "%s\t%d\t%d\t%d\n", p.pxx, &p.arrivalTime, &p.burstTime, &p.vPriority);
+			processes[index] = p;
+			index++;
+		}
+	}
+
+	fclose(inputFile);
+
+	//ordenando la lista por medio de AT
+	qsort(processes, ARRAY_LENGTH, sizeof(process), sortByAT);
+
+
+
+	
 } 
 
 void MLFQS(void *vargp) {
